@@ -55,7 +55,7 @@ app.get('/', (req, res) => {
 app.get('/health', (_req, res) => {
   res.json({ 
     ok: true, 
-    status: 'healthy',
+    status:  'healthy',
     uptime: process.uptime(),
     timestamp: new Date().toISOString()
   });
@@ -78,7 +78,7 @@ app.use((err, req, res, next) => {
   
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { 
+    .. .(process.env.NODE_ENV === 'development' && { 
       stack: err.stack,
       details: err 
     })
