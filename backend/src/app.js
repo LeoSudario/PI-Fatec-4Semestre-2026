@@ -23,10 +23,37 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.get('/health', (_req, res) => res.json({ ok: true }));
+// Rota raiz - Welcome/Health check principal
+app.get('/', (req, res) => {
+  res.json({
+    message: 'GymRadar API 🏋️',
+    status: 'running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      auth: '/auth',
+      gyms: '/gyms',
+      clients: '/clients'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
 
+// Health check específico
+app.get('/health', (_req, res) => res.json({ ok: true, status: 'healthy' }));
+
+// Rotas da API
 app.use('/auth', authRoutes);
 app.use('/gyms', gymRoutes);
 app.use('/clients', clientRoutes);
+
+// Rota 404 - deve vir DEPOIS das rotas
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.path,
+    method: req.method
+  });
+});
 
 export default app;
