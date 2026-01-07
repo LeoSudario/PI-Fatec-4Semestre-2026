@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 
 import authRoutes from './routes/authRoutes.js';
-import gymRoutes from './routes/gymRoutes. js';
+import gymRoutes from './routes/gymRoutes.js';
 import clientRoutes from './routes/clientRoutes.js';
 
 const app = express();
@@ -76,13 +76,16 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    .. .(process.env.NODE_ENV === 'development' && { 
-      stack: err.stack,
-      details: err 
-    })
-  });
+  const responseError = {
+    error: err. message || 'Internal server error'
+  };
+  
+  if (process.env.NODE_ENV === 'development') {
+    responseError.stack = err.stack;
+    responseError.details = err;
+  }
+  
+  res. status(err.status || 500).json(responseError);
 });
 
 export default app;
