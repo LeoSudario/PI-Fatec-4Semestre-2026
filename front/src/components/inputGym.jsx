@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import "./inputsClient";
+import { API_URL } from "../config/api";
+import "./inputClients.css";
 
 const InputGym = ({ gyms = [], onGymAdded }) => {
     const [form, setForm] = useState({ address: "", phone: "", capacity: "", name: "" });
@@ -13,11 +14,11 @@ const InputGym = ({ gyms = [], onGymAdded }) => {
         e.preventDefault();
         const token = localStorage.getItem("token");
         try {
-            const res = await fetch("http://localhost:5000/gyms", {
+            const res = await fetch(`${API_URL}/gyms`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
+                    "Content-Type":  "application/json"
                 },
                 body: JSON.stringify({
                     name: form.name,
@@ -36,7 +37,8 @@ const InputGym = ({ gyms = [], onGymAdded }) => {
             if (!res.ok) {
                 setMessage(data.message || "Failed to add gym.");
                 return;
-            }if (gyms.find((g) => g.name === data.name)) {
+            }
+            if (gyms.find((g) => g.name === data.name)) {
                 setMessage("Gym with this name already exists.");
                 return;
             }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL } from '../config/api';
 import { jwtDecode } from 'jwt-decode';
 import './login.css';
 
@@ -19,7 +20,7 @@ const Login = ({ onLogin }) => {
         setError(null);
         const route = isSignup ? "signup" : "login";
         try {
-            const res = await fetch(`http://localhost:5000/auth/${route}`, {
+            const res = await fetch(`${API_URL}/auth/${route}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form)
@@ -34,7 +35,7 @@ const Login = ({ onLogin }) => {
                 const decoded = jwtDecode(data.token);
                 onLogin(decoded.username);
             } else {
-                setError(data.message || (isSignup ? "Signup failed." : "Login failed."));
+                setError(data.message || (isSignup ?  "Signup failed." : "Login failed."));
             }
         } catch (err) {
             setError("Could not connect to server or invalid response.");

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import "./GymGrid.css";
+import { API_URL } from "../config/api";
+import "./GymGrid.css"
 
 export default function Dashboard({ gyms = [], onGymRemoved }) {
   const [deletingId, setDeletingId] = useState(null);
@@ -15,10 +16,10 @@ export default function Dashboard({ gyms = [], onGymRemoved }) {
     setDeletingId(gymId);
 
     try {
-      const res = await fetch(`http://localhost:5000/gyms/${gymId}`, {
+      const res = await fetch(`${API_URL}/gyms/${gymId}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization:  `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });

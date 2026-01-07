@@ -3,26 +3,40 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 
-import authRoutes from './routes/authRoutes.js';
+import authRoutes from './routes/authRoutes. js';
 import gymRoutes from './routes/gymRoutes.js';
 import clientRoutes from './routes/clientRoutes.js';
 
 const app = express();
 
 const corsOptions = {
-  origin:  process.env.NODE_ENV === 'production' 
-    ?  [
-        'https://pi-fatec-4semestre-2026.onrender.com',
-        'exp://*',
-        'http://localhost:8081',
-      ]
-    : '*',
+  origin:  function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'https://pi-fatec-4semestre-2026.onrender. com',
+    ];
+    
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders:  ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 86400,
 };
 
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 app.set('etag', false);
+
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -31,7 +45,6 @@ app.use((req, res, next) => {
 });
 
 app.use(logger(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -44,9 +57,9 @@ app.get('/', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     endpoints: {
       health: '/health',
-      auth: '/auth',
-      gyms: '/gyms',
-      clients: '/clients'
+      auth:  '/auth',
+      gyms:  '/gyms',
+      clients:  '/clients'
     },
     timestamp: new Date().toISOString()
   });
@@ -55,7 +68,7 @@ app.get('/', (req, res) => {
 app.get('/health', (_req, res) => {
   res.json({ 
     ok: true, 
-    status:  'healthy',
+    status: 'healthy',
     uptime: process.uptime(),
     timestamp: new Date().toISOString()
   });
@@ -68,8 +81,8 @@ app.use('/clients', clientRoutes);
 app.use((req, res) => {
   res.status(404).json({
     error: 'Route not found',
-    path: req. path,
-    method: req. method
+    path: req.path,
+    method: req.method
   });
 });
 
@@ -77,7 +90,7 @@ app.use((err, req, res, next) => {
   console.error('Error:', err);
   
   const responseError = {
-    error: err. message || 'Internal server error'
+    error: err.message || 'Internal server error'
   };
   
   if (process.env.NODE_ENV === 'development') {
@@ -85,7 +98,7 @@ app.use((err, req, res, next) => {
     responseError.details = err;
   }
   
-  res. status(err.status || 500).json(responseError);
+  res.status(err.status || 500).json(responseError);
 });
 
 export default app;

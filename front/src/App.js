@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
+import { API_URL } from './config/api';
 import Home from "./components/Routes/Home";
 import About from "./components/Routes/About";
 import Contact from "./components/Routes/Contact";
@@ -15,7 +16,7 @@ function App() {
 
   const fetchGyms = async () => {
     try {
-      const data = await authFetch("http://localhost:5000/gyms");
+      const data = await authFetch(`${API_URL}/gyms`);
       setGyms(Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []));
     } catch {
       setGyms([]);

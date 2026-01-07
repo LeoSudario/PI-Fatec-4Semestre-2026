@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { API_URL } from '../config/api';
 import { authFetch } from './authFetch';
 import { jwtDecode } from 'jwt-decode';
 import './inputClients.css';
@@ -29,7 +30,7 @@ export default function Inputs({ onClientAdded, onClientDeleted, username }) {
       return;
     }
     try {
-      await authFetch('http://localhost:5000/clients', {
+      await authFetch(`${API_URL}/clients`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -49,9 +50,9 @@ export default function Inputs({ onClientAdded, onClientDeleted, username }) {
       return;
     }
     try {
-      await authFetch('http://localhost:5000/clients/checkout', {
+      await authFetch(`${API_URL}/clients/checkout`, {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body:  JSON.stringify(payload),
       });
       setMessage('Checked out successfully!');
       onClientDeleted && onClientDeleted();
