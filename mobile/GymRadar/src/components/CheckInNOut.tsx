@@ -132,6 +132,7 @@ export default function CheckInNOut({
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title1}>Client Check-In / Check-Out</Text>
       <TextInput
         style={styles.input}
         placeholder="Gym name"
@@ -221,4 +222,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
   },
+  title1: { fontSize: 20, fontWeight: "700", marginBottom: 12, color: "#ffffffff", textAlign: "center" },
 });
