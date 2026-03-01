@@ -4,7 +4,7 @@ import { authFetch } from './authFetch';
 import { jwtDecode } from 'jwt-decode';
 import './inputClients.css';
 
-const DEFAULT_GYM_NAME = 'Gym2';
+const DEFAULT_GYM_NAME = 'Exprime';
 
 export default function Inputs({ onClientAdded, onClientDeleted, username }) {
   const [gymName, setGymName] = useState(DEFAULT_GYM_NAME);
