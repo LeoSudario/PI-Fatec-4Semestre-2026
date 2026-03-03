@@ -29,3 +29,15 @@ model Gym {
   capacity   Int
   occupancy  Int      @default(0)
 }
+
+model IoTEvent {
+  id         String   @id @map("_id") @db.ObjectId @default(auto())
+  gymName    String
+  deviceId   String
+  eventType  String   // "checkin" | "checkout"
+  source     String?  // "button" | "simulator"
+  occurredAt DateTime?
+  receivedAt DateTime @default(now())
+
+  @@index([gymName, receivedAt])
+}
