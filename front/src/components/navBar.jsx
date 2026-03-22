@@ -13,6 +13,7 @@ function NavBar({ onLogout }) {
         <li><a className="nav-link" href="/">Home</a></li>
         <li><a className="nav-link" href="/about">About</a></li>
         <li><a className="nav-link" href="/contact">Contact</a></li>
+        <li><a className="nav-link" href="/dashboard">Dashboard</a></li>
       </ul>
       <button className="nav-button-logout" onClick={handleLogout}>
         Logout

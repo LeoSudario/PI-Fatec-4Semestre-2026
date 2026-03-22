@@ -6,6 +6,7 @@ import About from "./components/Routes/About";
 import Contact from "./components/Routes/Contact";
 import NavBar from "./components/navBar";
 import Login from './components/login';
+import Dashboard from './components/Routes/DashBoard';
 import { authFetch } from './components/authFetch';
 import './App.css';
 
@@ -50,6 +51,7 @@ function App() {
           <Route path="/" element={<Home gyms={gyms} onRefreshGyms={fetchGyms} user={user} />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </Router>
     </div>

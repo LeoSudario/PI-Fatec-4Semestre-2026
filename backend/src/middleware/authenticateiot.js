@@ -1,5 +1,5 @@
 
-authenticateIot = (req, res, next) => {
+const authenticateIot = (req, res, next) => {
     const apiKey = req.header("X-API-Key");
     const expected = process.env.IOT_API_KEY;
 

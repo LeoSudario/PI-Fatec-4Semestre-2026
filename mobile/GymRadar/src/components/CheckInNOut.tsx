@@ -15,7 +15,7 @@ type Props = {
   onClientAdded?: () => void;
   onClientDeleted?: () => void;
   username?: string;
-  apiBaseUrl?: string; 
+  apiBaseUrl?: string;
 };
 
 const extra =
@@ -65,7 +65,7 @@ export default function CheckInNOut({
       let data: any = {};
       try {
         data = JSON.parse(text);
-      } catch {}
+      } catch { }
 
       if (!res.ok) {
         setMessage(data?.message || `Check-in failed (${res.status}).`);
@@ -113,7 +113,7 @@ export default function CheckInNOut({
       let data: any = {};
       try {
         data = JSON.parse(text);
-      } catch {}
+      } catch { }
 
       if (!res.ok) {
         setMessage(data?.message || `Check-out failed (${res.status}).`);
@@ -135,7 +135,7 @@ export default function CheckInNOut({
       <Text style={styles.title1}>Client Check-In / Check-Out</Text>
       <TextInput
         style={styles.input}
-        placeholder="Gym name"
+        placeholder="Exprime"
         placeholderTextColor="#d6d6d6ff"
         value={gymName}
         onChangeText={setGymName}

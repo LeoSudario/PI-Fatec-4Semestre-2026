@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key'
+const JWT_SECRET = process.env.JWT_SECRET 
 
 export const signup = async (req, res) => {
   const { username, password } = req.body

@@ -6,6 +6,7 @@ import logger from "morgan";
 import authRoutes from "./routes/authRoutes.js";
 import gymRoutes from "./routes/gymRoutes.js";
 import clientRoutes from "./routes/clientRoutes.js";
+import iotGymRoutes from "./routes/iotGymRoutes.js";
 
 const app = express();
 
@@ -79,6 +80,7 @@ app.get("/health", (_req, res) => {
 app.use("/auth", authRoutes);
 app.use("/gyms", gymRoutes);
 app.use("/clients", clientRoutes);
+app.use("/iot", iotGymRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
