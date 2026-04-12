@@ -42,7 +42,6 @@ export default function Home() {
     }
   }, []);
 
-  // Atualiza SOMENTE enquanto a página estiver aberta
   useFocusEffect(
     useCallback(() => {
       let alive = true;
@@ -56,8 +55,8 @@ export default function Home() {
         }
       };
 
-      tick(); // carrega ao entrar na tela
-      const id = setInterval(tick, 1000); // atualiza a cada 2s
+      tick(); 
+      const id = setInterval(tick, 1000); 
 
       return () => {
         alive = false;
