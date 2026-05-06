@@ -2,9 +2,8 @@ import { useEffect } from "react";
 import "./Home.css";
 import Dashboard from "../Dashboard";
 import InputGym from "../inputGym";
-import Inputs from "../inputsClient";
 import Footer from "../Hours";
-
+import GymMap from "./GymMap";
 
 function Home({ gyms = [], onRefreshGyms, user = "" }) {
     useEffect(() => {
@@ -12,7 +11,6 @@ function Home({ gyms = [], onRefreshGyms, user = "" }) {
     }, [onRefreshGyms]);
 
     const handleGymRemoved = (id) => {
-
         onRefreshGyms?.();
     };
 
@@ -26,22 +24,20 @@ function Home({ gyms = [], onRefreshGyms, user = "" }) {
             </section>
 
             <section className="home-columns">
-
                 <div>
                     <h2 style={{ marginBottom: 8 }}>Gym Dashboard</h2>
                     <Dashboard gyms={gyms} onGymRemoved={handleGymRemoved} />
                 </div>
-                <div className="inputsHome">
-                    <div className="panel">
-                        <InputGym onGymAdded={onRefreshGyms} />
-                    </div>
 
-                    <div className="panel2">
-                        <text>Dont forget to check the best hours for your gym!</text>
+                <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start', marginTop: '24px' }}>
+                    <div className="inputsHome" style={{ flex: '0 0 auto' }}>
+                        <div className="panel">
+                            <InputGym onGymAdded={onRefreshGyms} />
+                        </div>
                     </div>
-
-                    <div className="panel">
-                        <Inputs onClientAdded={onRefreshGyms} onClientDeleted={onRefreshGyms} username={user} />
+                    <div style={{ flex: '1', minWidth: '300px' }}>
+                        <h2 style={{ marginBottom: 8 }}>Gym Locations</h2>
+                        <GymMap gyms={gyms} />
                     </div>
                 </div>
 

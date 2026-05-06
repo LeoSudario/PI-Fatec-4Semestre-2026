@@ -51,7 +51,7 @@ function App() {
           <Route path="/" element={<Home gyms={gyms} onRefreshGyms={fetchGyms} user={user} />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard gyms={gyms} />} />
         </Routes>
       </Router>
     </div>
