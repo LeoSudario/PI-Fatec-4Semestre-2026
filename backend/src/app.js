@@ -31,6 +31,13 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization", "Cache-Control", "Pragma"],
   exposedHeaders: ["Content-Length", "Content-Type"],
   maxAge: 86400,
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Cache-Control",
+    "Pragma",
+    "X-API-Key"
+  ],
 };
 
 app.use(cors(corsOptions));

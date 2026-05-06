@@ -40,7 +40,7 @@ router.post("/gym/:gymName/checkin", authenticateIot, async (req, res) => {
         gymName,
         deviceId,
         eventType: "checkin",
-        source: "simulator", // ou "button" (tanto faz; use "simulator" se vem do simulador)
+        source: "IOT Device", 
         occurredAt: parseOccurredAt(occurredAt),
       },
     });
@@ -81,7 +81,7 @@ router.post("/gym/:gymName/checkout", authenticateIot, async (req, res) => {
         gymName,
         deviceId,
         eventType: "checkout",
-        source: "simulator",
+        source: "IOT Device",
         occurredAt: parseOccurredAt(occurredAt),
       },
     });
