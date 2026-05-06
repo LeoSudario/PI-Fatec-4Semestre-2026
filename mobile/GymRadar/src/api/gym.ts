@@ -36,3 +36,9 @@ export async function checkoutClient(name: string) {
 export async function deleteGym(id: string) {
   await apiClient.delete(`/gyms/${id}`);
 }
+
+export async function getDashboardAnalytics(gymName?: string) {
+  const url = gymName ? `/gyms/dashboard/analytics?gymName=${encodeURIComponent(gymName)}` : `/gyms/dashboard/analytics`;
+  const res = await apiClient.get(url);
+  return res;
+}

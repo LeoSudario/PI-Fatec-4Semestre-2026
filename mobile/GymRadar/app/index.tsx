@@ -146,6 +146,13 @@ export default function Home() {
         <View style={{ height: 12 }} />
 
         <Pressable
+          style={styles.dashboardButton}
+          onPress={() => router.push("/dashboard" as Href)}
+        >
+          <Text style={styles.dashboardButtonText}>View Analytics Dashboard 📊</Text>
+        </Pressable>
+
+        <Pressable
           style={styles.registerGymButton}
           onPress={() => router.push("/addGym" as Href)}
         >
@@ -235,4 +242,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   registerGymText: { color: "#ffffffff", fontWeight: "600", padding: 4 },
+  dashboardButton: {
+    backgroundColor: "#292929ff",
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#ee3235",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  dashboardButtonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 });
