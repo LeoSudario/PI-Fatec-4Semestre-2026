@@ -2,46 +2,36 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
-
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl,
   iconUrl,
   shadowUrl,
 });
-
-const defaultCenter = [-20.5386, -47.4008]; // Franca, SP
+const defaultCenter = [-20.5386, -47.4008]; 
 const geocodeCache = {};
-
 const knownLocations = {
   "smartfit": { lat: -20.5369, lon: -47.3828 },
   "exprime": { lat: -20.5620, lon: -47.3950 },
   "hydrox": { lat: -20.56267, lon: -47.39711 }
 };
-
 export default function GymMap({ gyms = [] }) {
   const [markers, setMarkers] = useState([]);
-
   useEffect(() => {
     let isMounted = true;
-    
     const geocodeGyms = async () => {
       const newMarkers = [];
       for (const gym of gyms) {
         const gymKey = gym.id || gym._id || gym.name;
-        
         if (geocodeCache[gymKey]) {
           newMarkers.push({ ...gym, ...geocodeCache[gymKey] });
           continue;
         }
-
         let lat, lon;
         const gymNameLower = (gym.name || "").toLowerCase();
-        
         // 1. Check known locations
         let foundKnown = false;
         for (const [key, coords] of Object.entries(knownLocations)) {
@@ -52,13 +42,11 @@ export default function GymMap({ gyms = [] }) {
             break;
           }
         }
-        
         if (foundKnown) {
           geocodeCache[gymKey] = { lat, lon };
           newMarkers.push({ ...gym, lat, lon });
           continue;
         }
-
         // 2. Fallback deterministic hash
         let hash = 0;
         const str = gym.name || '';
@@ -67,7 +55,6 @@ export default function GymMap({ gyms = [] }) {
         }
         lat = defaultCenter[0] + ((Math.abs(hash) % 100) / 100) * 0.02 - 0.01;
         lon = defaultCenter[1] + ((Math.abs(hash >> 2) % 100) / 100) * 0.02 - 0.01;
-        
         // 3. Try geocoding
         if (gym.address) {
           try {
@@ -86,29 +73,24 @@ export default function GymMap({ gyms = [] }) {
           } catch (e) {
             console.error("Geocoding failed for", gym.address);
           }
-          await new Promise(resolve => setTimeout(resolve, 600)); // avoid rate limit
+          await new Promise(resolve => setTimeout(resolve, 600)); 
         }
-        
         geocodeCache[gymKey] = { lat, lon };
         newMarkers.push({ ...gym, lat, lon });
       }
-      
       if (isMounted) {
         setMarkers(newMarkers);
       }
     };
-
     if (gyms.length > 0) {
       geocodeGyms();
     } else {
       setMarkers([]);
     }
-    
     return () => {
       isMounted = false;
     };
   }, [gyms]);
-
   return (
     <div style={{ 
       height: '250px', 
