@@ -1,186 +1,109 @@
-# GymRadar
+# GymRadar - Sistema IoT de Monitoramento de Fluxo em Academias 🏋️‍♂️
 
-Projeto interdisciplinar da Faculdade de Tecnologia — FATEC — primeiro semestre de 2026
+O **GymRadar** é um ecossistema de software acadêmico completo voltado para a gestão e monitoramento em tempo real da ocupação de academias, integrando dispositivos IoT (Internet das Coisas) em catracas, até dashboards interativos com modelos de inteligência artificial.
 
-Aplicativo móvel (Expo/React Native) com backend Node.js/Express + Prisma (MongoDB) para gerenciamento de academias, autenticação, registro de clientes (check-in/out) e visualização em tempo real da ocupação das unidades.
-
-## Sumário
-- Visão Geral
-- Principais Funcionalidades
-- Stack Tecnológica
-- Arquitetura
-- Como Executar (Backend e Mobile)
-- Configuração
-- API (Resumo)
-- Modelos de Dados (Prisma)
-- Dicas e Solução de Problemas
-- Scripts Úteis
-- Licença e Créditos
+Este projeto visa resolver um problema clássico: a superlotação de academias em horários de pico. Através do processamento massivo de dados de acessos, oferecemos uma ferramenta de análise preditiva para gestores e um aplicativo em tempo real para os alunos.
 
 ---
 
-## Visão Geral
-GymRadar permite:
-- Criar e gerenciar academias (nome único, capacidade, telefone, endereço)
-- Autenticação de usuários (login e cadastro) com JWT
-- Check-in/Check-out de clientes por academia
-- Visualização da ocupação atual versus capacidade com uma barra colorida:
-  - Verde: abaixo de 50%
-  - Laranja: entre 50% e 90%
-  - Vermelho: acima de 90%
+## 📖 Visão Geral
 
-Este projeto foi desenvolvido como parte do “Projeto interdisciplinar da faculdade de tecnologia — FATEC — primeiro semestre de 2026”.
+O sistema coleta, processa e exibe dados de entrada e saída (check-ins e check-outs) dos clientes nas catracas físicas. Ele é composto por três frentes principais de tecnologia:
+1. **Painel Web (Web Dashboard)**: Ferramenta administrativa com KPIs, mapas de calor e visualizações de demanda.
+2. **Aplicativo Mobile (React Native)**: Aplicativo focado no aluno, permitindo que ele veja academias próximas via geolocalização e verifique a lotação atual de sua unidade antes de sair de casa.
+3. **Módulo de Ciência de Dados (Data Science)**: Camada de inteligência que analisa o histórico dos acessos para prever lotações futuras usando Regressão Linear, indicando os horários mais vazios da semana.
 
-## Principais Funcionalidades
-- Autenticação (login, signup) e guarda de rotas: usuários não autenticados são redirecionados para a tela de login.
-- Lista de academias com barra de ocupação animada e ação de exclusão.
-- Registro de clientes (check-in/out) por academia configurada.
-- Atualização imediata da ocupação ao realizar check-in/out.
-- Simulador IoT (tela separada) para testes de dados.
+---
 
-## Stack Tecnológica
-- Mobile: Expo + React Native + Expo Router
-- Backend: Node.js + Express
-- ORM: Prisma
-- Banco de dados: MongoDB
-- Autenticação: JWT
-- Armazenamento local (mobile): AsyncStorage
+## 💼 Regras de Negócio
 
-## Arquitetura
-- mobile/GymRadar
-  - src/api: cliente HTTP (fetch) com gerenciamento de token
-  - src/context: contexto de Auth (token/usuário) e Gym (ocupação/refresh)
-  - src/components: componentes UI (OccupancyBar, InputGym, CheckInNOut, etc.)
-  - app/: telas e navegação com Expo Router (index, login, signup, simulator, addGym)
-- backend
-  - src/routes: rotas Express (auth, gyms, clients)
-  - Prisma: schema de modelos (User, Client, Gym) com MongoDB
+As principais regras que orientam o ecossistema GymRadar:
 
-## Como Executar
+1. **Gestão de Lotação Relativa**: A lotação da academia nunca é medida apenas em números absolutos, mas sim em porcentagem (`% de Ocupação = Check-ins / Capacidade Total da Unidade`). Isso permite comparações justas entre uma unidade pequena (capacidade: 100) e uma unidade grande (capacidade: 500).
+2. **Definição Estatística de Horários de Pico**: Os horários de pico ou horários vazios não são decididos empiricamente. O sistema calcula a distribuição de tráfego, isola o quartil superior (Top 25% de tráfego) e o define como os **horários de pico** (Packed Hours). Por outro lado, o quartil inferior (Bottom 25%) é classificado como os **melhores horários** (Empty Hours).
+3. **Previsão de Fluxo**: Através de Análise de Regressão pelo método OLS (Mínimos Quadrados Ordinários), o sistema encontra a correlação entre `dia_da_semana` e `hora_do_dia` para prever estatisticamente o fluxo de amanhã.
+4. **Isolamento Geográfico (Geofencing)**: No aplicativo Mobile, a exibição de unidades é controlada por distância radial a partir das coordenadas GPS locais do usuário para a academia.
+5. **Autenticação Segura**: Operações vitais do painel (como deletar unidades ou analisar dados confidenciais de catraca) estão contidas sob um middleware JWT no backend, impedindo acessos não autorizados.
+
+---
+
+## ⚙️ Arquitetura Técnica
+
+O projeto segue uma arquitetura baseada em microsserviços (desacoplada) moderna e de alta escalabilidade:
+
+### 1. Backend API (Node.js & Express)
+* **ORM**: Prisma DB (Garante mapeamento robusto e typesafety na conexão).
+* **Banco de Dados**: MongoDB (NoSQL) alocado na Nuvem (MongoDB Atlas), propiciando altíssima taxa de ingestão de eventos IoT sem lock-in estrutural restritivo.
+* **Segurança**: Autenticação via JSON Web Tokens (JWT) e encriptação usando bcryptjs.
+
+### 2. Frontend Administrativo (React.js)
+* **Framework**: React.js estruturado em Vite/CRA.
+* **Componentes Gráficos**: Utilização maciça de `Recharts` para plotar gráficos de Área e Barras com respostas elásticas ao filtro do usuário.
+* **Consumo de API**: Autenticação stateful com tokens locais interconectados com endpoints construídos em Express.
+
+### 3. Aplicativo Mobile (React Native + Expo)
+* **Navegação**: Sistema moderno baseado em Expo Router (file-based routing) com Layouts para proteção de autenticação global.
+* **Mapas Nativos**: Integração profunda com `react-native-maps` e `expo-location` para renderizar marcadores das academias e solicitar permissões ativas de GPS do dispositivo.
+
+### 4. Machine Learning & Forecasting (Python)
+* **Bibliotecas Base**: `pandas` e `numpy` para pré-processamento, agregação e limpeza das coletas do IoT.
+* **Modelagem Numérica**: `scikit-learn` (LinearRegression) e `statsmodels` (Mínimos Quadrados Ordinários - OLS) extraindo resíduos e significância de p-value das lotações.
+* **DataViz**: Gráficos estatísticos isolados (Heatmaps) elaborados com `plotly` exportados como `html` autossuficiente e JSONs consumíveis pelo React.
+
+---
+
+## 🔄 Fluxo de Dados (Data Flow Pipeline)
+
+1. **Geração (IoT)**: Um evento de hardware de catraca (`evento: checkin` ou `checkout`) é disparado via requisição POST ao `/api/gyms/iot`. 
+2. **Ingestão (Backend)**: O Express.js recebe o payload, anexa carimbos de data/hora rígidos em `UTC` (para evitar conflitos de fuso horário), e o Prisma cria um documento `IoTEvent` no cluster MongoDB Atlas.
+3. **Processamento Preditivo (Cron/Python)**: Periodicamente, o script `previsao_ocupacao.py` consome massivamente toda a coleção `IoTEvent`, processa vetores estatísticos e sobrecreve matrizes JSON consolidadas (`best_times.json` e `previsao_futura.json`) localmente para o frontend.
+4. **Exibição (Frontend)**: O usuário final interage com o React Dashboard, que de maneira unificada apresenta via `Recharts` uma intersecção do tempo real (puxado pelo Node.js) e do previsional (fornecido em arquivos estáticos gerados pelo Python).
+
+---
+
+## 🚀 Instruções de Instalação e Execução
 
 ### Pré-requisitos
-- Node.js 18+
-- MongoDB (local ou Atlas) e variável `DATABASE_URL`
-- Expo CLI (opcional, via `npx`)
+* Node.js v18+ e NPM v9+
+* Python 3.10+ (pip instanciado)
+* Conta no Expo.dev (Para visualizar o Mobile)
 
-### Backend
-1. Instale dependências:
-   - `npm install`
-2. Configure variável de ambiente:
-   - `.env` → `DATABASE_URL="mongodb+srv://<user>:<pass>@<cluster>/<db>?retryWrites=true&w=majority"`
-3. Prisma:
-   - `npx prisma generate`
-   - Para MongoDB, não há migrations tradicionais; garanta que a conexão está correta.
-4. Execute o servidor:
-   - `npm run dev` (ou `npm start`)
-5. O backend deve responder em `http://localhost:5000` (ajuste conforme necessário).
-
-### Mobile (Expo)
-1. Instale dependências:
-   - `npm install` (ou `yarn`)
-2. Configure o backend no app:
-   - Em `app.json` ou `app.config.js`, configure `extra.backendUrl` (LAN/localhost):
-     - Ex.: `"extra": { "backendUrl": "http://192.168.100.166:5000", "gymId": "Academia Centro" }`
-3. Inicie o app:
-   - `npx expo start`
-   - Android emulador usa `http://10.0.2.2:5000` para apontar ao host local; no dispositivo físico, use IP da máquina na mesma rede.
-4. Escaneie o QR code no Expo Go ou rode no emulador.
-
-## Configuração
-
-### Variáveis Expo (extra)
-- `backendUrl`: URL do backend (ex.: `http://192.168.100.166:5000`)
-- `gymId`: nome da academia padrão para operações de check-in/out (ex.: `Academia Centro`)
-
-### Armazenamento de Token
-- Chave AsyncStorage: `auth_token`
-- O cliente HTTP (`src/api/client.ts`) aplica automaticamente `Authorization: Bearer <token>` quando o token está definido.
-- Em `AuthContext`, o estado de autenticação é derivado da presença do token e hidratação inicial.
-
-## API (Resumo)
-
-- Auth
-  - POST `/auth/login` → body: `{ username, password }` → retorno: `{ token }`
-  - POST `/auth/signup` → body: `{ username, password }` → retorno: `{ token }`
-- Gyms
-  - GET `/gyms` → lista de academias
-  - POST `/gyms` → body: `{ name, address?, phone?, capacity }`
-  - DELETE `/gyms/:id` → remove academia por id (ObjectId string)
-- Clients
-  - POST `/clients` → body: `{ gymName }` → registra check-in (cliente simulado ou real)
-  - POST `/clients/checkout` → body: `{ gymName }` → registra check-out
-
-Respostas incorretas (erros) retornam `message` para exibição no cliente.
-
-## Modelos de Dados (Prisma)
-
-Schema (MongoDB) típico:
-```prisma
-generator client {
-  provider = "prisma-client-js"
-}
-datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
-}
-
-model User {
-  id        String  @id @map("_id") @db.ObjectId @default(auto())
-  username  String  @unique
-  password  String
-}
-
-model Client {
-  id       String  @id @map("_id") @db.ObjectId @default(auto())
-  name     String
-  gymName  String
-  email    String?
-  phone    String?
-}
-
-model Gym {
-  id         String  @id @map("_id") @db.ObjectId @default(auto())
-  name       String  @unique
-  address    String?
-  phone      String?
-  capacity   Int
-  occupancy  Int      @default(0)
-}
+### Passo 1: Configurar Variáveis de Ambiente
+Na pasta raiz do `/backend`, copie o `.env.example` para `.env` e configure suas chaves do MongoDB e JWT Secret:
+```bash
+DATABASE_URL=mongodb+srv://<USER>:<PASS>@cluster.mongodb.net/database
+JWT_SECRET=super_secret_key
 ```
 
-Observações:
-- `Gym.name` é único — a tentativa de criar um nome já existente gera erro Prisma `P2002`.
-- IDs são `ObjectId` via string; não envie `id` ao criar, e ao deletar use exatamente o `id` retornado.
-- `capacity` é `Int` e `occupancy` inicia em 0.
+### Passo 2: Executar o Backend
+```bash
+cd backend
+npm install
+npm run build # Gera o cliente Prisma
+npm run dev
+```
 
-## Dicas e Solução de Problemas
+### Passo 3: Executar o Frontend Dashboard
+Abra um novo terminal:
+```bash
+cd front
+npm install
+npm start
+```
 
-- Erro 500 ao criar academia:
-  - Geralmente por `P2002` (nome duplicado), tipo inválido (capacity não numérico) ou campo obrigatório ausente.
-  - Valide no cliente (nome não vazio; `capacity` > 0) e trate `P2002` no backend com retorno 409.
-- Android emulador e localhost:
-  - Use `http://10.0.2.2:5000` no emulador para atingir o host local. Em dispositivo físico, use IP da máquina.
-- JWT decode:
-  - Evite dependência extra (jwt-decode) se já obtém `username` do `AuthContext`.
-- Barra de ocupação:
-  - Cores baseadas no percentual:
-    - `< 50%` → Verde
-    - `>= 50% e < 90%` → Laranja
-    - `>= 90%` → Vermelho
-- Atualização imediata após check-in/out:
-  - Chame `GymContext.refresh()` e recarregue a lista de academias (`getGyms()`) ao concluir operações de cliente.
+### Passo 4: Executar a Análise Preditiva e Gerar Gráficos (Python)
+Certifique-se de estar na raiz do repositório inteiro:
+```bash
+pip install pandas scikit-learn statsmodels plotly python-dotenv pymongo
+python previsao_ocupacao.py
+```
+*(Após rodar o script, os novos arquivos JSON serão injetados magicamente no projeto React!)*
 
-## Scripts Úteis (exemplos)
-- Backend:
-  - `npm run dev` → inicia servidor com nodemon
-  - `npx prisma generate` → gera client Prisma
-- Mobile:
-  - `npx expo start -c` → inicia Expo e limpa cache
-  - `npm run android` / `npm run ios` → roda em emuladores
-
-## Licença e Créditos
-- Projeto acadêmico: “Projeto interdisciplinar da faculdade de tecnologia — FATEC — primeiro semestre de 2026”.
-- Este repositório é para fins educacionais/demonstração.
-- Créditos aos participantes e docentes da FATEC.
-
----
+### Passo 5: Executar o App Mobile (React Native)
+Abra um terceiro terminal:
+```bash
+cd mobile/GymRadar
+npm install
+npx expo start
+```
+*Escaneie o QR Code usando o app "Expo Go" em seu smartphone Android/iOS.*
