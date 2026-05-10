@@ -11,10 +11,14 @@
     "migrate": "prisma migrate deploy",
     "studio": "prisma studio"
   },
-  "keywords": ["api", "gymradar", "express"],
+  "keywords": [
+    "api",
+    "gymradar",
+    "express"
+  ],
   "author": "LeoSudario",
-  "license":  "MIT",
-  "dependencies":  {
+  "license": "MIT",
+  "dependencies": {
     "@prisma/client": "^6.17.0",
     "express": "^5.1.0",
     "cors": "^2.8.5",

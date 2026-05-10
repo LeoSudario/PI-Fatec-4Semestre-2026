@@ -1,27 +1,27 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
   const gyms = [
     {
-      name: 'SmartFit',
-      address: 'Av. Alonso Y Alonso, 500 - Jardim Veneza, Franca - SP, 14401-426',
+      name: "SmartFit",
+      address: "Av. Alonso Y Alonso, 500 - Jardim Veneza, Franca - SP, 14401-426",
       capacity: 200,
-      phone: ''
+      phone: "",
     },
     {
-      name: 'Exprime',
-      address: 'Av. Reinaldo Chioca, 660 - Parque Progresso, Franca - SP, 14403-085',
+      name: "Exprime",
+      address: "Av. Reinaldo Chioca, 660 - Parque Progresso, Franca - SP, 14403-085",
       capacity: 150,
-      phone: ''
+      phone: "",
     },
     {
-      name: 'Hydrox',
-      address: 'jose abraao da silva, 2340, parque progresso, Franca - SP',
+      name: "Hydrox",
+      address: "jose abraao da silva, 2340, parque progresso, Franca - SP",
       capacity: 100,
-      phone: ''
-    }
+      phone: "",
+    },
   ];
 
   for (const gym of gyms) {
@@ -35,7 +35,7 @@ async function main() {
 }
 
 main()
-  .catch(e => {
+  .catch((e) => {
     console.error(e);
     process.exit(1);
   })

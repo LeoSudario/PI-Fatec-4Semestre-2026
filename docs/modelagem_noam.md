@@ -1,6 +1,6 @@
 1. users
    - Campos:
-     - _id: ObjectId
+     - \_id: ObjectId
      - username: string (unique)
      - passwordHash: string
      - role: string (ex.: "admin" | "staff")
@@ -12,7 +12,7 @@
 
 2. gyms
    - Campos:
-     - _id: ObjectId
+     - \_id: ObjectId
      - name: string
      - address: string
      - phone: string
@@ -27,11 +27,11 @@
 
 3. clients
    - Campos (compatível com o que o README recebe):
-     - _id: ObjectId
+     - \_id: ObjectId
      - name: string
      - email: string
      - phone: string
-     - gymName: string  // campo atual usado pelo front/back do projeto
+     - gymName: string // campo atual usado pelo front/back do projeto
      - checkInAt: date
      - active: boolean
    - Índices:
@@ -41,15 +41,17 @@
      - Manter gymName funciona e reflete o payload atual; porém, usar gymName causa duplicação e fragilidade (mudança de nome da academia quebra referência).
 
 Recomendação técnica (melhoria)
-- Migrar clients.gymName → clients.gymId (ObjectId referencing gyms._id):
+
+- Migrar clients.gymName → clients.gymId (ObjectId referencing gyms.\_id):
   - Motivo: integridade referencial, menor risco de inconsistência, consultas mais confiáveis.
   - Como migrar:
-    1. Criar campo gymId em clients e popular com o _id correspondente (script de migração).
+    1. Criar campo gymId em clients e popular com o \_id correspondente (script de migração).
     2. Atualizar endpoints front/back para aceitar/usar gymId.
     3. Preservar gymName se precisar exibição rápida (redundância controlada).
 - Usar transações (Mongo replica set / Atlas) ao fazer check-in/out: inserir/atualizar client e incrementar/decrementar gyms.currentOccupancy para manter consistência.
 
 Operações e consultas otimizadas
+
 - Listar academias:
   - db.gyms.find().sort({ name: 1 })
 - Buscar clientes de uma academia (se usar gymId):
@@ -61,6 +63,7 @@ Operações e consultas otimizadas
   - commit
 
 Índices sugeridos
+
 - users.username : unique
 - clients.email : unique (se aplicável)
 - clients.gymId (ou clients.gymName)

@@ -35,7 +35,7 @@ Linguagens no repositório: JavaScript (≈87.7%), CSS (≈9%), HTML (≈3.3%).
 
 ## Demonstração rápida
 
-- Backend padrão: http://localhost:5000  
+- Backend padrão: http://localhost:5000
 - Frontend padrão: http://localhost:3000
 
 (Se você hospedar ou usar Docker, atualize os links / variáveis de ambiente.)
@@ -45,17 +45,20 @@ Linguagens no repositório: JavaScript (≈87.7%), CSS (≈9%), HTML (≈3.3%).
 ## Instalação (local)
 
 Pré‑requisitos:
+
 - Node.js (recomendo >= 18)
 - npm ou yarn
 - MongoDB (localmente ou Atlas)
 
-1) Clone
+1. Clone
+
 ```bash
 git clone https://github.com/FatecFranca/DSM-P3-G07-2025-2.git
 cd DSM-P3-G07-2025-2
 ```
 
-2) Backend
+2. Backend
+
 ```bash
 cd backend
 npm install
@@ -63,7 +66,8 @@ cp .env.example .env   # ajustar variáveis
 npm run dev            # ou: node server.js
 ```
 
-3) Frontend
+3. Frontend
+
 ```bash
 cd frontend
 npm install
@@ -71,6 +75,7 @@ npm start
 ```
 
 Usando Docker (opcional):
+
 ```bash
 docker compose up --build
 ```
@@ -78,6 +83,7 @@ docker compose up --build
 ---
 
 ## Exemplo .env (ajuste conforme implementação)
+
 ```
 # Backend
 PORT=5000
@@ -96,6 +102,7 @@ Nunca comite o arquivo `.env` real.
 ## Endpoints (resumo)
 
 Autenticação
+
 - POST /signup
   - Body: { "username", "password" }
 - POST /login
@@ -103,19 +110,22 @@ Autenticação
   - Retorna: { "token": "JWT_TOKEN" }
 
 Gyms (protegido — Authorization: Bearer TOKEN)
+
 - GET /gyms
 - POST /gyms
   - Body: { "name", "address", "phone", "capacity" }
 - DELETE /gyms/:id
 
 Clients (protegido)
+
 - GET /clients
 - POST /clients
-  - Body: { "name", "email", "phone", "gymName" }  // check-in
+  - Body: { "name", "email", "phone", "gymName" } // check-in
 - POST /clients/checkout
-  - Body: { "name", "gymName" }  // check-out
+  - Body: { "name", "gymName" } // check-out
 
 Exemplo de chamada protegida:
+
 ```bash
 curl -H "Authorization: Bearer <TOKEN>" http://localhost:5000/gyms
 ```
@@ -125,6 +135,7 @@ curl -H "Authorization: Bearer <TOKEN>" http://localhost:5000/gyms
 ---
 
 ## Estrutura do projeto (resumida)
+
 ```
 backend/
   server.js

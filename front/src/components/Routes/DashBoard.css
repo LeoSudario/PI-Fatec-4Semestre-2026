@@ -78,7 +78,8 @@
   text-align: center;
 }
 
-.dashboard-loading, .dashboard-error {
+.dashboard-loading,
+.dashboard-error {
   text-align: center;
   padding: 4rem;
   font-size: 1.2rem;
@@ -135,4 +136,3 @@
   font-weight: 500;
   letter-spacing: 1px;
 }
-

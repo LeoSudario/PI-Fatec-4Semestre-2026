@@ -1,11 +1,13 @@
 Guia rápido para executar localmente (adaptado à estrutura lida no repositório)
 
 Pré-requisitos:
+
 - Node.js (recomendado >=16)
 - npm
 - MongoDB local (ou Atlas; ajuste MONGO_URI)
 
-1) Backend
+1. Backend
+
 - Copie backend/.env.example -> backend/.env e ajuste MONGO_URI (ex.: mongodb://localhost:27017/gymapp)
 - Instale dependências:
   cd backend
@@ -19,7 +21,8 @@ Pré-requisitos:
   (O package.json normalmente já tem "start": "node ./src/bin/server.js"; app.js registra rotas /auth, /gyms, /clients)
 - Endpoints documentados: docs/openapi.yaml (pode importar no Swagger Editor ou Postman)
 
-2) Frontend
+2. Frontend
+
 - cd front
 - npm install
 - npm start
@@ -30,6 +33,7 @@ Pré-requisitos:
   - Teste POST /gyms, GET /gyms, POST /clients, POST /clients/checkout conforme spec.
 
 Observações:
+
 - O projeto atualmente usa payloads com "gymName" no POST /clients (conforme README). Recomenda-se migrar para gymId (ObjectId) posteriormente.
 - Se a equipe optar por Prisma, executar (no backend):
   npx prisma generate
