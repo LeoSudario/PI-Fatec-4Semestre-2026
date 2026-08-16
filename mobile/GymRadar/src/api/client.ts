@@ -1,27 +1,31 @@
-import Constants from "expo-constants";
+import { API_URL } from "../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-const extra = (Constants?.manifest as any)?.extra || (Constants as any)?.expoConfig?.extra || {};
-const backendUrl: string = extra.backendUrl || "http://192.168.100.166:5000";
+
 let authToken: string | null = null;
+
 export function setAuthToken(token: string | null) {
   authToken = token;
 }
+
 export async function hydrateAuthToken() {
   try {
     const token = await AsyncStorage.getItem("auth_token");
     if (token) setAuthToken(token);
   } catch {}
 }
+
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = `${backendUrl}${path}`;
+  const url = `${API_URL}${path}`;
   const headers: Record<string, string> = {
     "Cache-Control": "no-cache",
     Pragma: "no-cache",
     ...(init?.headers as Record<string, string> | undefined),
   };
   if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
   const res = await fetch(url, { ...init, headers });
   const text = await res.text().catch(() => "");
+
   if (!res.ok) {
     try {
       const json = JSON.parse(text);
@@ -36,6 +40,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     return {} as T;
   }
 }
+
 const apiClient = {
   get<T>(path: string) {
     return request<T>(path, { method: "GET" });
@@ -51,4 +56,5 @@ const apiClient = {
     return request<T>(path, { method: "DELETE" });
   },
 };
+
 export default apiClient;

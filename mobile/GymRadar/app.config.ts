@@ -1,17 +1,16 @@
-import "dotenv/config";
 import { ExpoConfig } from "expo/config";
 const config: ExpoConfig = {
-  name: "DSM GymRadar Mobile",
-  slug: "dsm-gymradar-mobile",
-  scheme: "dsmgymradar",
+  name: "GymRadar",
+  slug: "gymradar",
+  scheme: "gymradar",
   version: "1.0.0",
   orientation: "portrait",
   platforms: ["ios", "android", "web"],
   extra: {
-    backendUrl: process.env.BACKEND_BASE_URL || "http://192.168.100.166:5000",
-    gymId: process.env.GYM_ID || "Gym2",
-    iotMode: process.env.IOT_MODE || "http",
-    mqttUrl: process.env.MQTT_URL || "",
+    backendUrl:
+      process.env.EXPO_PUBLIC_BACKEND_URL ||
+      "https://pi-fatec-4semestre-2026.onrender.com",
+    gymId: process.env.EXPO_PUBLIC_GYM_ID || "Academia Centro",
   },
 };
 export default config;

@@ -1,31 +1,52 @@
-import Constants from "expo-constants";
+import { DEFAULT_GYM_ID } from "../config";
 import apiClient from "./client";
-const extra = (Constants?.manifest as any)?.extra || (Constants as any)?.expoConfig?.extra || {};
-const gymId: string = extra.gymId || "Academia Centro";
-export type Gym = { id: string; name: string; capacity: number; occupancy: number };
+
+export type Gym = {
+  id: string;
+  name: string;
+  address?: string;
+  phone?: string;
+  capacity: number;
+  occupancy: number;
+};
+
 export async function getGyms(): Promise<Gym[]> {
   const gyms = await apiClient.get<Gym[]>(`/gyms?ts=${Date.now()}`);
   return gyms;
 }
-export async function getOccupancy(): Promise<{ current: number; capacity: number; name: string }> {
+
+export async function getOccupancy(): Promise<{
+  current: number;
+  capacity: number;
+  name: string;
+}> {
   const gyms = await getGyms();
-  const target = gymId.trim().toLowerCase();
+  const target = DEFAULT_GYM_ID.trim().toLowerCase();
   const gym = gyms.find((g) => g.name.trim().toLowerCase() === target);
   const current = typeof gym?.occupancy === "number" ? gym!.occupancy : 0;
-  const capacity = typeof gym?.capacity === "number" && gym!.capacity > 0 ? gym!.capacity : 50;
-  return { current, capacity, name: gym?.name ?? gymId };
+  const capacity =
+    typeof gym?.capacity === "number" && gym!.capacity > 0 ? gym!.capacity : 50;
+  return { current, capacity, name: gym?.name ?? DEFAULT_GYM_ID };
 }
-export async function addClient(name: string, email: string, phone: string) {
-  const body = { name, gymName: gymId, email, phone };
+
+export async function addClient(
+  name: string,
+  email: string,
+  phone: string
+) {
+  const body = { name, gymName: DEFAULT_GYM_ID, email, phone };
   await apiClient.post("/clients", body);
 }
+
 export async function checkoutClient(name: string) {
-  const body = { name, gymName: gymId };
+  const body = { name, gymName: DEFAULT_GYM_ID };
   await apiClient.post("/clients/checkout", body);
 }
+
 export async function deleteGym(id: string) {
   await apiClient.delete(`/gyms/${id}`);
 }
+
 export async function getDashboardAnalytics(gymName?: string) {
   const url = gymName
     ? `/gyms/dashboard/analytics?gymName=${encodeURIComponent(gymName)}`
