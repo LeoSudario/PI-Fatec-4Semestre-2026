@@ -18,6 +18,9 @@ import { router, type Href, useFocusEffect } from "expo-router";
 import Timer from "../src/components/Timer";
 import CheckInNOut from "@/src/components/CheckInNOut";
 import * as GymAPI from "../src/api/gym";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, SPACING, RADIUS, SHADOWS } from "@/src/config";
+
 type Gym = {
   id: string;
   name: string;
@@ -26,18 +29,21 @@ type Gym = {
   capacity: number;
   occupancy: number;
 };
+
 export default function Home() {
   const { gym: gymState, refresh } = useGym();
   const { logout, user } = useAuth();
   const [gyms, setGyms] = useState<Gym[]>([]);
+
   const reloadGyms = useCallback(async () => {
     try {
       const list = await GymAPI.getGyms();
       setGyms(list);
-    } catch (e) {
-      console.log("Failed to fetch gyms", e);
+    } catch {
+      console.log("Failed to fetch gyms");
     }
   }, []);
+
   useFocusEffect(
     useCallback(() => {
       let alive = true;
@@ -45,7 +51,9 @@ export default function Home() {
         try {
           const list = await GymAPI.getGyms();
           if (alive) setGyms(list);
-        } catch (e) {}
+        } catch {
+          // silent
+        }
       };
       tick();
       const id = setInterval(tick, 1000);
@@ -55,17 +63,17 @@ export default function Home() {
       };
     }, [])
   );
+
   async function handleDeleteGym(id: string) {
     try {
       setGyms((prev) => prev.filter((g) => g.id !== id));
       await GymAPI.deleteGym(id);
-      Alert.alert("Deleted", "Gym deleted successfully");
     } catch (err: any) {
-      console.error(err);
       Alert.alert("Delete failed", err?.message ?? String(err));
       reloadGyms();
     }
   }
+
   return (
     <KeyboardAvoidingView
       style={styles.screen}
@@ -80,41 +88,56 @@ export default function Home() {
         <View style={styles.containerImg}>
           <ImageBackground
             source={{
-              uri: "https://t3.ftcdn.net/jpg/08/27/87/60/360_F_827876077_k0EWo3jSiWZPR8fRgsSbZFT9SkrozNuj.jpg",
+              uri: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80",
             }}
             style={styles.imageBackground}
             imageStyle={styles.imageStyle}
             resizeMode="cover"
           >
             <LinearGradient
-              colors={["rgba(0,0,0,0.55)", "rgba(0,0,0,0.25)", "transparent"]}
+              colors={["rgba(10,10,15,0.85)", "rgba(10,10,15,0.5)", "transparent"]}
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.hero}>
               <View style={styles.headerContainer}>
-                <Text style={styles.header}>Hi {user?.username ?? "Member"}</Text>
+                <View>
+                  <Text style={styles.greeting}>Hello,</Text>
+                  <Text style={styles.header}>{user?.username ?? "Member"}</Text>
+                </View>
                 <Pressable
-                  style={styles.logOutButton}
+                  style={({ pressed }) => [
+                    styles.logOutButton,
+                    pressed && { opacity: 0.8 },
+                  ]}
                   onPress={() => {
                     logout();
                     router.push("/login" as Href);
                   }}
                 >
-                  <Text style={styles.logOutText}>Logout</Text>
+                  <Ionicons name="log-out-outline" size={18} color={COLORS.white} />
                 </Pressable>
               </View>
               <Timer />
               <Text style={styles.heroTitle}>
-                Push Your <Text style={styles.highlight}>Limits</Text>
+                Push Your{"\n"}
+                <Text style={styles.highlight}>Limits</Text>
               </Text>
             </View>
           </ImageBackground>
         </View>
+
+        <View style={styles.sectionHeader}>
+          <Ionicons name="business" size={18} color={COLORS.accent} />
+          <Text style={styles.sectionTitle}>Your Gyms</Text>
+          <Text style={styles.gymCount}>{gyms.length}</Text>
+        </View>
+
         {gyms.map((g) => (
-          <View key={g.id} style={{ marginBottom: 12 }}>
+          <View key={g.id} style={{ marginBottom: SPACING.md }}>
             <OccupancyBar gym={g} onDelete={handleDeleteGym} />
           </View>
         ))}
+
         {gyms.length === 0 && (
           <OccupancyBar
             gym={{
@@ -127,13 +150,45 @@ export default function Home() {
             }}
           />
         )}
-        <View style={{ height: 12 }} />
-        <Pressable style={styles.dashboardButton} onPress={() => router.push("/dashboard" as Href)}>
-          <Text style={styles.dashboardButtonText}>View Analytics Dashboard 📊</Text>
+
+        <View style={{ height: SPACING.sm }} />
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.dashboardButton,
+            pressed && styles.dashboardButtonPressed,
+          ]}
+          onPress={() => router.push("/dashboard" as Href)}
+        >
+          <LinearGradient
+            colors={[COLORS.surface, COLORS.surfaceLight]}
+            style={styles.dashboardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <View style={styles.dashBtnContent}>
+              <View style={styles.dashBtnLeft}>
+                <Ionicons name="stats-chart" size={20} color={COLORS.accent} />
+                <Text style={styles.dashboardButtonText}>Analytics Dashboard</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.textMuted} />
+            </View>
+          </LinearGradient>
         </Pressable>
-        <Pressable style={styles.registerGymButton} onPress={() => router.push("/addGym" as Href)}>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.registerGymButton,
+            pressed && styles.registerGymButtonPressed,
+          ]}
+          onPress={() => router.push("/addGym" as Href)}
+        >
+          <Ionicons name="add-circle-outline" size={20} color={COLORS.white} />
           <Text style={styles.registerGymText}>Register New Gym</Text>
         </Pressable>
+
+        <View style={{ height: SPACING.md }} />
+
         <CheckInNOut
           username={user?.username ?? undefined}
           onClientAdded={() => {
@@ -145,89 +200,142 @@ export default function Home() {
             reloadGyms();
           }}
         />
+
+        <View style={{ height: SPACING.lg }} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  screen: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+  },
   content: {
-    padding: 20,
-    gap: 12,
     paddingBottom: 32,
-    backgroundColor: "#292929ff",
+  },
+  containerImg: {
+    height: 280,
+    width: "100%",
+    overflow: "hidden",
+  },
+  imageBackground: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  imageStyle: {},
+  hero: {
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xl,
   },
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 4,
-    zIndex: 1,
+    alignItems: "flex-start",
+    marginBottom: SPACING.sm,
   },
-  header: { fontSize: 24, fontWeight: "700", color: "#fff", padding: 14 },
+  greeting: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    fontWeight: "500",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  header: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: COLORS.white,
+  },
   logOutButton: {
-    backgroundColor: "#ee3235",
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  logOutText: { color: "#fff", fontWeight: "600" },
-  containerImg: {
-    height: 250,
-    width: "100%",
-    borderRadius: 8,
-    overflow: "hidden",
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  imageBackground: { flex: 1, padding: 12, justifyContent: "space-between" },
-  imageStyle: { borderRadius: 8 },
-  hero: {
-    paddingHorizontal: 18,
-    paddingBottom: Platform.OS === "ios" ? 18 : 14,
+    backgroundColor: COLORS.accent + "30",
+    borderRadius: RADIUS.full,
+    padding: SPACING.sm,
+    borderWidth: 1,
+    borderColor: COLORS.accent + "40",
   },
   heroTitle: {
-    color: "#fff",
-    fontSize: 34,
-    fontWeight: "700",
+    color: COLORS.white,
+    fontSize: 32,
+    fontWeight: "800",
     lineHeight: 38,
   },
-  highlight: { color: "#ee3235" },
-  refreshButton: {
-    backgroundColor: "#eee",
-    padding: 10,
-    borderRadius: 6,
-    alignItems: "center",
+  highlight: {
+    color: COLORS.accent,
   },
-  refreshText: { color: "#111", fontWeight: "600" },
-  openSimButton: {
-    backgroundColor: "#ee3235",
-    padding: 10,
-    borderRadius: 6,
+  sectionHeader: {
+    flexDirection: "row",
     alignItems: "center",
-    opacity: 0.3,
+    gap: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.md,
   },
-  openSimText: { color: "#ffffffff", fontWeight: "600", padding: 4 },
-  registerGymButton: {
-    backgroundColor: "#ee3235",
-    padding: 10,
-    borderRadius: 6,
-    alignItems: "center",
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text,
+    flex: 1,
   },
-  registerGymText: { color: "#ffffffff", fontWeight: "600", padding: 4 },
+  gymCount: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.accent,
+    backgroundColor: COLORS.accent + "15",
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: RADIUS.full,
+    overflow: "hidden",
+  },
   dashboardButton: {
-    backgroundColor: "#292929ff",
-    padding: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 12,
+    marginHorizontal: SPACING.lg,
+    borderRadius: RADIUS.lg,
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#ee3235",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderColor: COLORS.border,
+    ...SHADOWS.subtle,
   },
-  dashboardButtonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  dashboardGradient: {
+    borderRadius: RADIUS.lg,
+  },
+  dashboardButtonPressed: {
+    opacity: 0.85,
+  },
+  dashBtnContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: SPACING.lg,
+  },
+  dashBtnLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+  },
+  dashboardButtonText: {
+    color: COLORS.text,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  registerGymButton: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+    backgroundColor: COLORS.accent,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.sm,
+    ...SHADOWS.button,
+  },
+  registerGymButtonPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
+  registerGymText: {
+    color: COLORS.white,
+    fontWeight: "700",
+    fontSize: 15,
+  },
 });

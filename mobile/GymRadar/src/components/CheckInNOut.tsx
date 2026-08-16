@@ -1,16 +1,24 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Constants from "expo-constants";
 import { useGym } from "@/src/context/GymContext";
+import { API_URL, COLORS, SPACING, RADIUS, SHADOWS } from "@/src/config";
+import { Ionicons } from "@expo/vector-icons";
+
 type Props = {
   onClientAdded?: () => void;
   onClientDeleted?: () => void;
   username?: string;
   apiBaseUrl?: string;
 };
-const extra = (Constants as any)?.expoConfig?.extra || (Constants?.manifest as any)?.extra || {};
-const CONFIG_BACKEND_URL: string = extra.backendUrl || "http://192.168.100.166:5000";
+
 export default function CheckInNOut({
   onClientAdded,
   onClientDeleted,
@@ -19,11 +27,14 @@ export default function CheckInNOut({
 }: Props) {
   const [gymName, setGymName] = useState("");
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { refresh } = useGym();
-  const baseUrl = apiBaseUrl ?? CONFIG_BACKEND_URL;
+  const baseUrl = apiBaseUrl ?? API_URL;
+
   const handleCheckIn = async () => {
     setMessage("");
+    setSuccess(false);
     const payloadGymName = (gymName || "").trim();
     if (!payloadGymName) {
       setMessage("Gym name is required.");
@@ -52,7 +63,7 @@ export default function CheckInNOut({
         return;
       }
       setMessage("Checked in successfully!");
-      alert(`Check-in successful on ${payloadGymName} , dont forget to check out later!`);
+      setSuccess(true);
       await refresh();
       onClientAdded?.();
     } catch (err: any) {
@@ -61,8 +72,10 @@ export default function CheckInNOut({
       setSubmitting(false);
     }
   };
+
   const handleCheckOut = async () => {
     setMessage("");
+    setSuccess(false);
     const payloadGymName = (gymName || "").trim();
     if (!payloadGymName) {
       setMessage("Gym name is required.");
@@ -91,6 +104,7 @@ export default function CheckInNOut({
         return;
       }
       setMessage("Checked out successfully!");
+      setSuccess(true);
       await refresh();
       onClientDeleted?.();
     } catch (err: any) {
@@ -99,100 +113,172 @@ export default function CheckInNOut({
       setSubmitting(false);
     }
   };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title1}>Client Check-In / Check-Out</Text>
+      <View style={styles.headerRow}>
+        <Ionicons name="finger-print" size={22} color={COLORS.blue} />
+        <Text style={styles.title}>Check-In / Check-Out</Text>
+      </View>
+
       <TextInput
         style={styles.input}
-        placeholder="Exprime"
-        placeholderTextColor="#d6d6d6ff"
+        placeholder="Enter gym name..."
+        placeholderTextColor={COLORS.textMuted}
         value={gymName}
         onChangeText={setGymName}
       />
+
       <View style={styles.buttonsContainer}>
         <Pressable
           style={({ pressed }) => [
-            styles.primaryButton,
-            pressed && styles.pressed,
-            submitting && styles.disabled,
+            styles.checkInBtn,
+            pressed && styles.btnPressed,
+            submitting && styles.btnDisabled,
           ]}
           onPress={handleCheckIn}
           disabled={submitting}
         >
           {submitting ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={COLORS.white} size="small" />
           ) : (
-            <Text style={styles.primaryButtonText}>Check In</Text>
+            <>
+              <Ionicons name="log-in" size={18} color={COLORS.white} />
+              <Text style={styles.btnText}>Check In</Text>
+            </>
           )}
         </Pressable>
+
         <Pressable
           style={({ pressed }) => [
-            styles.secondaryButton,
-            pressed && styles.pressedSecondary,
-            submitting && styles.disabled,
+            styles.checkOutBtn,
+            pressed && styles.btnPressed,
+            submitting && styles.btnDisabled,
           ]}
           onPress={handleCheckOut}
           disabled={submitting}
         >
-          <Text style={styles.secondaryButtonText}>Check Out</Text>
+          {submitting ? (
+            <ActivityIndicator color={COLORS.white} size="small" />
+          ) : (
+            <>
+              <Ionicons name="log-out" size={18} color={COLORS.white} />
+              <Text style={styles.btnText}>Check Out</Text>
+            </>
+          )}
         </Pressable>
       </View>
-      {!!message && <Text style={styles.message}>{message}</Text>}
+
+      {!!message && (
+        <View
+          style={[
+            styles.messageBox,
+            { borderColor: success ? COLORS.green : COLORS.accent },
+          ]}
+        >
+          <Ionicons
+            name={success ? "checkmark-circle" : "alert-circle"}
+            size={16}
+            color={success ? COLORS.green : COLORS.accent}
+          />
+          <Text
+            style={[
+              styles.message,
+              { color: success ? COLORS.green : COLORS.accentLight },
+            ]}
+          >
+            {message}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
-    padding: 12,
-    backgroundColor: "#2e2e2eff",
-    borderRadius: 8,
-  },
-  title: { fontSize: 20, fontWeight: "700", marginBottom: 12, color: "#ffffffff" },
-  input: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
     borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#414141ff",
-    color: "#ffffffff",
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderColor: COLORS.border,
+    ...SHADOWS.card,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text,
+  },
+  input: {
+    backgroundColor: COLORS.input,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.md,
     paddingVertical: 14,
-    marginBottom: 10,
-    fontWeight: "600",
+    fontSize: 15,
+    color: COLORS.text,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: SPACING.md,
     textAlign: "center",
+    fontWeight: "600",
   },
-  primaryButton: {
-    backgroundColor: "#36a40aff",
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: "center",
-    marginTop: 4,
-    padding: 10,
-  },
-  primaryButtonText: { color: "#fff", fontWeight: "700" },
-  secondaryButton: {
-    backgroundColor: "#ee3235",
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: "center",
-    marginTop: 8,
-    padding: 10,
-  },
-  secondaryButtonText: { color: "#fff", fontWeight: "700" },
-  pressed: { opacity: 0.85 },
-  pressedSecondary: { opacity: 0.85 },
-  disabled: { opacity: 0.7 },
-  message: { marginTop: 10, color: "#f7f7f7ff" },
   buttonsContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 10,
+    gap: SPACING.sm,
   },
-  title1: {
-    fontSize: 20,
+  checkInBtn: {
+    flex: 1,
+    backgroundColor: COLORS.green,
+    borderRadius: RADIUS.md,
+    paddingVertical: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    ...SHADOWS.subtle,
+  },
+  checkOutBtn: {
+    flex: 1,
+    backgroundColor: COLORS.accent,
+    borderRadius: RADIUS.md,
+    paddingVertical: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    ...SHADOWS.subtle,
+  },
+  btnText: {
+    color: COLORS.white,
     fontWeight: "700",
-    marginBottom: 12,
-    color: "#ffffffff",
-    textAlign: "center",
+    fontSize: 14,
+  },
+  btnPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.97 }],
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  messageBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+    marginTop: SPACING.md,
+    padding: SPACING.sm,
+    backgroundColor: COLORS.surfaceLight,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+  },
+  message: {
+    fontSize: 13,
+    fontWeight: "600",
+    flex: 1,
   },
 });

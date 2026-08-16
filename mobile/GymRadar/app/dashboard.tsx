@@ -8,17 +8,20 @@ import {
   Pressable,
   Dimensions,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { LineChart, BarChart } from "react-native-chart-kit";
 import * as GymAPI from "../src/api/gym";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { COLORS, SPACING, RADIUS, SHADOWS } from "@/src/config";
+
 const screenWidth = Dimensions.get("window").width;
+
 export default function DashboardScreen() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [gyms, setGyms] = useState<any[]>([]);
   const [selectedGym, setSelectedGym] = useState<string>("");
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -30,12 +33,13 @@ export default function DashboardScreen() {
     };
     init();
   }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await GymAPI.getDashboardAnalytics(selectedGym);
-        setData(res.data ? res.data : res); // Axios returns inside .data usually, but apiClient might unwrap
+        const res: any = await GymAPI.getDashboardAnalytics(selectedGym);
+        setData(res?.data ? res.data : res);
       } catch (e) {
         console.error("Dashboard analytics error", e);
       } finally {
@@ -44,19 +48,24 @@ export default function DashboardScreen() {
     };
     fetchData();
   }, [selectedGym]);
+
   const lineChartData = useMemo(() => {
     const targetData = data?.data || data;
-    if (!targetData?.evolucao_hora || targetData.evolucao_hora.length === 0) return null;
+    if (!targetData?.evolucao_hora || targetData.evolucao_hora.length === 0)
+      return null;
+
     const grouped: any = {};
     targetData.evolucao_hora.forEach((item: any) => {
       if (!grouped[item.hora]) grouped[item.hora] = 0;
       grouped[item.hora] += item.checkins;
     });
+
     const sortedHours = Object.keys(grouped)
       .map(Number)
       .sort((a, b) => a - b);
     const labels = sortedHours.map((h) => `${h}h`);
     const dataset = sortedHours.map((h) => grouped[h]);
+
     return {
       labels: labels.length > 0 ? labels : ["0h"],
       datasets: [
@@ -68,15 +77,20 @@ export default function DashboardScreen() {
       ],
     };
   }, [data]);
+
   const barChartData = useMemo(() => {
     const targetData = data?.data || data;
     if (!targetData?.volume_dia || targetData.volume_dia.length === 0) return null;
+
     const grouped: any = {};
     targetData.volume_dia.forEach((item: any) => {
       if (!grouped[item.dia_semana]) grouped[item.dia_semana] = 0;
       grouped[item.dia_semana] += item.checkins;
     });
-    const order = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    const order = [
+      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+    ];
     const shortDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const labels = [];
     const dataset = [];
@@ -87,40 +101,45 @@ export default function DashboardScreen() {
       }
     }
     if (labels.length === 0) return null;
+
     return {
       labels,
-      datasets: [
-        {
-          data: dataset,
-        },
-      ],
+      datasets: [{ data: dataset }],
     };
   }, [data]);
+
   const predictions = useMemo(() => {
     const targetData = data?.data || data;
     if (!targetData?.evolucao_hora || targetData.evolucao_hora.length === 0)
       return { empty: null, packed: null };
+
     const grouped: { [key: number]: number } = {};
     targetData.evolucao_hora.forEach((item: any) => {
       const h = Number(item.hora);
       if (!grouped[h]) grouped[h] = 0;
       grouped[h] += item.checkins;
     });
+
     const hours = Object.keys(grouped)
       .map(Number)
       .sort((a, b) => a - b);
     if (hours.length === 0) return { empty: null, packed: null };
+
     const values = hours.map((h) => grouped[h]);
     const mean = values.reduce((a, b) => a + b, 0) / values.length;
-    const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
+    const variance =
+      values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
     const stddev = Math.sqrt(variance);
     const sortedValues = [...values].sort((a, b) => a - b);
     const q1 = sortedValues[Math.floor(sortedValues.length * 0.25)];
     const q3 = sortedValues[Math.floor(sortedValues.length * 0.75)];
+
     const emptyThreshold = Math.max(q1, mean - stddev * 0.5);
     const packedThreshold = Math.min(q3, mean + stddev * 0.5);
+
     const emptyHours = hours.filter((h) => grouped[h] <= emptyThreshold);
     const packedHours = hours.filter((h) => grouped[h] >= packedThreshold);
+
     const formatBlocks = (hrList: number[]) => {
       if (!hrList || hrList.length === 0) return "N/A";
       const blocks: { start: number; end: number }[] = [];
@@ -134,35 +153,42 @@ export default function DashboardScreen() {
         }
       }
       blocks.push(currentBlock);
-      return blocks.map((b) => `${b.start}:00 - ${b.end + 1}:00`).join(" || ");
+      return blocks.map((b) => `${b.start}:00 - ${b.end + 1}:00`).join("  |  ");
     };
+
     return {
       empty: formatBlocks(emptyHours),
       packed: formatBlocks(packedHours),
     };
   }, [data]);
+
   const chartConfig = {
-    backgroundGradientFrom: "#1e1e1e",
-    backgroundGradientTo: "#1e1e1e",
-    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    backgroundGradientFrom: COLORS.surface,
+    backgroundGradientTo: COLORS.surface,
+    color: (opacity = 1) => `rgba(241, 250, 238, ${opacity})`,
     strokeWidth: 2,
-    barPercentage: 0.5,
+    barPercentage: 0.6,
     useShadowColorFromDataset: false,
     propsForDots: {
       r: "4",
       strokeWidth: "2",
-      stroke: "#ee3235",
+      stroke: COLORS.accent,
     },
+    decimalPlaces: 0,
   };
+
   const targetData = data?.data || data || {};
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={22} color={COLORS.text} />
         </Pressable>
+        <Ionicons name="stats-chart" size={20} color={COLORS.accent} />
         <Text style={styles.headerTitle}>Analytics</Text>
       </View>
+
       <View style={styles.pillContainer}>
         <ScrollView
           horizontal
@@ -183,57 +209,89 @@ export default function DashboardScreen() {
               style={[styles.pill, selectedGym === g.name && styles.pillActive]}
               onPress={() => setSelectedGym(g.name)}
             >
-              <Text style={[styles.pillText, selectedGym === g.name && styles.pillTextActive]}>
+              <Text
+                style={[
+                  styles.pillText,
+                  selectedGym === g.name && styles.pillTextActive,
+                ]}
+              >
                 {g.name}
               </Text>
             </Pressable>
           ))}
         </ScrollView>
       </View>
+
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {loading ? (
-          <ActivityIndicator size="large" color="#ee3235" style={{ marginTop: 50 }} />
+          <ActivityIndicator size="large" color={COLORS.accent} style={{ marginTop: 60 }} />
         ) : !data ? (
-          <Text style={styles.errorText}>No data available</Text>
+          <View style={styles.emptyState}>
+            <Ionicons name="analytics-outline" size={48} color={COLORS.textMuted} />
+            <Text style={styles.emptyText}>No data available</Text>
+          </View>
         ) : (
           <>
             <View style={styles.kpiGrid}>
               <View style={styles.kpiCard}>
+                <View style={[styles.kpiAccent, { backgroundColor: COLORS.accent }]} />
                 <Text style={styles.kpiLabel}>Total Check-ins</Text>
                 <Text style={styles.kpiValue}>{targetData.total_checkins || 0}</Text>
               </View>
               <View style={styles.kpiCard}>
+                <View style={[styles.kpiAccent, { backgroundColor: COLORS.blue }]} />
                 <Text style={styles.kpiLabel}>Avg / Hour</Text>
-                <Text style={styles.kpiValue}>{Number(targetData.media_hora || 0).toFixed(1)}</Text>
+                <Text style={styles.kpiValue}>
+                  {Number(targetData.media_hora || 0).toFixed(1)}
+                </Text>
               </View>
               <View style={styles.kpiCard}>
+                <View style={[styles.kpiAccent, { backgroundColor: COLORS.green }]} />
                 <Text style={styles.kpiLabel}>Median / Hour</Text>
                 <Text style={styles.kpiValue}>
                   {Number(targetData.mediana_hora || 0).toFixed(1)}
                 </Text>
               </View>
               <View style={styles.kpiCard}>
+                <View style={[styles.kpiAccent, { backgroundColor: COLORS.orange }]} />
                 <Text style={styles.kpiLabel}>Peak Time %</Text>
-                <Text style={styles.kpiValue}>{Number(targetData.pct_pico || 0).toFixed(1)}%</Text>
+                <Text style={styles.kpiValue}>
+                  {Number(targetData.pct_pico || 0).toFixed(1)}%
+                </Text>
               </View>
             </View>
+
             <View style={styles.predictionContainer}>
-              <Text style={styles.predictionTitle}>best hours for {selectedGym || "all gyms"}</Text>
-              <Text style={styles.predictionText}>{predictions?.empty || "No data available"}</Text>
-              <Text style={[styles.predictionTitle, styles.packedTitle]}>
-                busiest hours for {selectedGym || "all gyms"}
+              <View style={styles.predHeader}>
+                <Ionicons name="trending-down" size={18} color={COLORS.green} />
+                <Text style={styles.predictionTitle}>
+                  Best hours for {selectedGym || "all gyms"}
+                </Text>
+              </View>
+              <Text style={styles.predictionText}>
+                {predictions?.empty || "No data available"}
               </Text>
+
+              <View style={styles.predDivider} />
+
+              <View style={styles.predHeader}>
+                <Ionicons name="trending-up" size={18} color={COLORS.orange} />
+                <Text style={[styles.predictionTitle, { color: COLORS.orange }]}>
+                  Busiest hours for {selectedGym || "all gyms"}
+                </Text>
+              </View>
               <Text style={styles.predictionText}>
                 {predictions?.packed || "No data available"}
               </Text>
             </View>
+
             <View style={styles.chartCard}>
               <Text style={styles.chartTitle}>Hourly Check-ins</Text>
               {lineChartData ? (
                 <LineChart
                   data={lineChartData}
-                  width={screenWidth - 48}
-                  height={220}
+                  width={screenWidth - 64}
+                  height={200}
                   chartConfig={chartConfig}
                   bezier
                   style={styles.chartStyle}
@@ -242,13 +300,14 @@ export default function DashboardScreen() {
                 <Text style={styles.noData}>No hourly data available.</Text>
               )}
             </View>
+
             <View style={styles.chartCard}>
               <Text style={styles.chartTitle}>Daily Volume</Text>
               {barChartData ? (
                 <BarChart
                   data={barChartData}
-                  width={screenWidth - 48}
-                  height={220}
+                  width={screenWidth - 64}
+                  height={200}
                   yAxisLabel=""
                   yAxisSuffix=""
                   chartConfig={chartConfig}
@@ -267,162 +326,173 @@ export default function DashboardScreen() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212",
+    backgroundColor: COLORS.bg,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 15,
-    backgroundColor: "#1e1e1e",
+    paddingTop: 56,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    backgroundColor: COLORS.header,
     borderBottomWidth: 1,
-    borderBottomColor: "#333",
+    borderBottomColor: COLORS.border,
+    gap: SPACING.sm,
   },
   backButton: {
-    padding: 8,
-    marginRight: 10,
+    padding: SPACING.sm,
+    marginRight: SPACING.xs,
   },
   headerTitle: {
-    color: "#fff",
-    fontSize: 22,
+    color: COLORS.text,
+    fontSize: 20,
     fontWeight: "700",
   },
   pillContainer: {
-    backgroundColor: "#1e1e1e",
-    paddingVertical: 12,
+    backgroundColor: COLORS.header,
+    paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#2a2a2a",
+    borderBottomColor: COLORS.border,
   },
   pillScroll: {
-    paddingHorizontal: 20,
-    gap: 10,
+    paddingHorizontal: SPACING.lg,
+    gap: SPACING.sm,
   },
   pill: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#2a2a2a",
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.surfaceLight,
     borderWidth: 1,
-    borderColor: "#3a3a3a",
+    borderColor: COLORS.border,
   },
   pillActive: {
-    backgroundColor: "rgba(238, 50, 53, 0.2)",
-    borderColor: "#ee3235",
+    backgroundColor: COLORS.accent + "20",
+    borderColor: COLORS.accent,
   },
   pillText: {
-    color: "#aaa",
+    color: COLORS.textMuted,
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: 13,
   },
   pillTextActive: {
-    color: "#ee3235",
+    color: COLORS.accent,
     fontWeight: "700",
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    padding: SPACING.lg,
     paddingBottom: 40,
-    gap: 20,
+    gap: SPACING.lg,
   },
   kpiGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: 12,
+    gap: SPACING.sm,
   },
   kpiCard: {
     width: "48%",
-    backgroundColor: "#1e1e1e",
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: "#ee3235",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: "hidden",
+    ...SHADOWS.subtle,
+  },
+  kpiAccent: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: 4,
+    height: "100%",
+    borderTopLeftRadius: RADIUS.lg,
+    borderBottomLeftRadius: RADIUS.lg,
   },
   kpiLabel: {
-    color: "#aaa",
-    fontSize: 12,
+    color: COLORS.textMuted,
+    fontSize: 11,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   kpiValue: {
-    color: "#fff",
-    fontSize: 24,
+    color: COLORS.text,
+    fontSize: 22,
     fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
   chartCard: {
-    backgroundColor: "#1e1e1e",
-    padding: 16,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,
+    backgroundColor: COLORS.surface,
+    padding: SPACING.lg,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.card,
   },
   chartTitle: {
-    color: "#fff",
+    color: COLORS.text,
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 16,
+    marginBottom: SPACING.md,
   },
   chartStyle: {
-    marginVertical: 8,
-    borderRadius: 12,
-    marginLeft: -10,
+    marginVertical: SPACING.sm,
+    borderRadius: RADIUS.md,
+    marginLeft: -SPACING.md,
   },
-  errorText: {
-    color: "#aaa",
-    textAlign: "center",
-    marginTop: 40,
+  emptyState: {
+    alignItems: "center",
+    marginTop: 60,
+    gap: SPACING.md,
+  },
+  emptyText: {
+    color: COLORS.textMuted,
     fontSize: 16,
+    fontWeight: "500",
   },
   noData: {
-    color: "#666",
+    color: COLORS.textMuted,
     textAlign: "center",
-    padding: 20,
+    padding: SPACING.xl,
     fontStyle: "italic",
   },
   predictionContainer: {
-    backgroundColor: "#0a0a0a",
-    padding: 24,
-    borderRadius: 16,
+    backgroundColor: COLORS.surface,
+    padding: SPACING.lg,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: "#2a2a2a",
+    borderColor: COLORS.border,
+    ...SHADOWS.card,
+  },
+  predHeader: {
+    flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 6,
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm,
   },
   predictionTitle: {
-    color: "#ee3235",
-    fontSize: 18,
-    fontWeight: "800",
-    marginBottom: 12,
-    textTransform: "lowercase",
-    letterSpacing: 0.5,
-  },
-  packedTitle: {
-    color: "#ff9800",
-    marginTop: 20,
+    color: COLORS.green,
+    fontSize: 15,
+    fontWeight: "700",
   },
   predictionText: {
-    color: "#eaeaea",
-    fontSize: 16,
+    color: COLORS.text,
+    fontSize: 14,
     fontWeight: "500",
-    letterSpacing: 1,
+    lineHeight: 22,
+  },
+  predDivider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: SPACING.md,
   },
 });

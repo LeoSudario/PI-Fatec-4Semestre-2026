@@ -7,20 +7,20 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Constants from "expo-constants";
-import { router } from "expo-router";
+import { API_URL, COLORS, SPACING, RADIUS, SHADOWS } from "@/src/config";
+import { Ionicons } from "@expo/vector-icons";
+
 type Gym = { name: string };
+
 type Props = {
   gyms?: Gym[];
   onGymAdded?: (gym: any) => void;
   token?: string;
   apiBaseUrl?: string;
 };
-const extra = (Constants as any)?.expoConfig?.extra || (Constants?.manifest as any)?.extra || {};
-const CONFIG_BACKEND_URL: string = extra.backendUrl || "http://192.168.100.166:5000";
+
 const InputGym: React.FC<Props> = ({ gyms = [], onGymAdded, token, apiBaseUrl }) => {
   const [form, setForm] = useState({
     address: "",
@@ -28,29 +28,33 @@ const InputGym: React.FC<Props> = ({ gyms = [], onGymAdded, token, apiBaseUrl })
     capacity: "",
     name: "",
   });
-  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
   const handleChange = (key: keyof typeof form) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
-  const baseUrl = apiBaseUrl ?? CONFIG_BACKEND_URL;
+
+  const baseUrl = apiBaseUrl ?? API_URL;
+
   const handleSubmit = async () => {
-    setMessage("");
     const name = form.name.trim();
     const capNum = Number(form.capacity);
+
     if (!name) {
-      setMessage("Name is required.");
+      Alert.alert("Validation", "Name is required.");
       return;
     }
     if (!Number.isFinite(capNum) || capNum <= 0) {
-      setMessage("Capacity must be a positive number.");
+      Alert.alert("Validation", "Capacity must be a positive number.");
       return;
     }
     if (gyms.find((g) => g.name.trim().toLowerCase() === name.toLowerCase())) {
-      setMessage("Gym with this name already exists.");
+      Alert.alert("Validation", "Gym with this name already exists.");
       return;
     }
+
     setSubmitting(true);
     const authToken = token ?? (await AsyncStorage.getItem("auth_token"));
+
     try {
       const res = await fetch(`${baseUrl}/gyms`, {
         method: "POST",
@@ -72,118 +76,165 @@ const InputGym: React.FC<Props> = ({ gyms = [], onGymAdded, token, apiBaseUrl })
       try {
         data = JSON.parse(text);
       } catch {}
+
       if (!res.ok) {
-        setMessage(data?.message || `Failed to add gym (${res.status}).`);
-        setSubmitting(false);
+        Alert.alert("Error", data?.message || `Failed (${res.status})`);
         return;
       }
-      onGymAdded?.(data);
+
+      Alert.alert("Success", `"${data.name || name}" created!`);
       setForm({ address: "", phone: "", capacity: "", name: "" });
-      setMessage("Gym added successfully!");
-      Alert.alert("Success", "Gym added successfully!", [
-        { text: "OK", onPress: () => router.replace("/") },
-      ]);
-    } catch (err) {
-      setMessage("Network error: Could not add gym.");
-      console.error("Error adding gym:", err);
+      onGymAdded?.(data);
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "Failed to create gym");
     } finally {
       setSubmitting(false);
     }
   };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add New Gym</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Endereço"
-        placeholderTextColor="#999"
-        value={form.address}
-        onChangeText={handleChange("address")}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Telefone"
-        placeholderTextColor="#999"
-        keyboardType="phone-pad"
-        value={form.phone}
-        onChangeText={handleChange("phone")}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Capacity"
-        placeholderTextColor="#999"
-        keyboardType="number-pad"
-        value={form.capacity}
-        onChangeText={handleChange("capacity")}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Nome da Academia"
-        placeholderTextColor="#999"
-        value={form.name}
-        onChangeText={handleChange("name")}
-      />
+      <View style={styles.headerRow}>
+        <Ionicons name="business" size={22} color={COLORS.accent} />
+        <Text style={styles.title}>Register Gym</Text>
+      </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Gym Name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. SmartFit"
+          placeholderTextColor={COLORS.textMuted}
+          value={form.name}
+          onChangeText={handleChange("name")}
+        />
+      </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Address</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Full address"
+          placeholderTextColor={COLORS.textMuted}
+          value={form.address}
+          onChangeText={handleChange("address")}
+        />
+      </View>
+
+      <View style={styles.row}>
+        <View style={[styles.inputGroup, { flex: 1 }]}>
+          <Text style={styles.label}>Phone</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="(00) 00000-0000"
+            placeholderTextColor={COLORS.textMuted}
+            value={form.phone}
+            onChangeText={handleChange("phone")}
+            keyboardType="phone-pad"
+          />
+        </View>
+        <View style={[styles.inputGroup, { flex: 1, marginLeft: SPACING.sm }]}>
+          <Text style={styles.label}>Capacity</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="200"
+            placeholderTextColor={COLORS.textMuted}
+            value={form.capacity}
+            onChangeText={handleChange("capacity")}
+            keyboardType="numeric"
+          />
+        </View>
+      </View>
+
       <Pressable
-        style={[styles.button, submitting && styles.buttonDisabled]}
+        style={({ pressed }) => [
+          styles.button,
+          pressed && styles.buttonPressed,
+          submitting && styles.buttonDisabled,
+        ]}
         onPress={handleSubmit}
         disabled={submitting}
       >
         {submitting ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={COLORS.white} size="small" />
         ) : (
-          <Text style={styles.buttonText}>Add Gym</Text>
+          <>
+            <Ionicons name="add-circle" size={20} color={COLORS.white} />
+            <Text style={styles.buttonText}>Create Gym</Text>
+          </>
         )}
       </Pressable>
-      <TouchableOpacity onPress={() => router.replace("/")} style={styles.backButton}>
-        <Text style={{ color: "#fff", fontWeight: "600" }}>back</Text>
-      </TouchableOpacity>
-      {!!message && <Text style={styles.message}>{message}</Text>}
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
-    display: "flex",
-    justifyContent: "center",
-    height: "100%",
-    padding: 16,
-    width: "100%",
-    backgroundColor: "#292929ff",
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.card,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+    marginBottom: SPACING.lg,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
-    marginBottom: 12,
-    color: "#ffffffff",
-    textAlign: "center",
+    color: COLORS.text,
+  },
+  inputGroup: {
+    marginBottom: SPACING.md,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xs,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   input: {
+    backgroundColor: COLORS.input,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: COLORS.text,
     borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#4e4e4eff",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 10,
-    color: "#111",
+    borderColor: COLORS.border,
+  },
+  row: {
+    flexDirection: "row",
   },
   button: {
-    backgroundColor: "#ee3235",
-    borderRadius: 8,
-    paddingVertical: 12,
+    backgroundColor: COLORS.accent,
+    borderRadius: RADIUS.md,
+    paddingVertical: 14,
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    justifyContent: "center",
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+    ...SHADOWS.button,
   },
-  buttonDisabled: { opacity: 0.7 },
-  buttonText: { color: "#fff", fontWeight: "700" },
-  message: { marginTop: 10, color: "#333" },
-  backButton: {
-    marginTop: 12,
-    alignItems: "center",
-    backgroundColor: "#ee3235",
-    padding: 10,
-    borderRadius: 8,
-    width: 80,
+  buttonPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: COLORS.white,
+    fontWeight: "700",
+    fontSize: 16,
   },
 });
+
 export default InputGym;
